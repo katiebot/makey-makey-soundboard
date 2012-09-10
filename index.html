@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+	<title>MaKey MaKey Soundboard</title>
+	<script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
+	<script>
+		(function($){
+			var _old = $.unique;
+			$.unique = function(arr){
+				if (!!arr[0].nodeType){
+					return _old.apply(this,arguments);
+				} else {
+					return $.grep(arr,function(v,k){
+						return $.inArray(v,arr) === k;
+					});
+				}
+			};
+		})(jQuery);
+
+		jQuery(function($){
+			var supportedKeys = ['a','d','f','g','h','j','s','w','space','up','down','left','right'];		
+			var history = [];
+			
+			$('#audio-files').on('keyup change',function(e){
+				var audioSelect = $('<select></select>');
+				var audioFiles = $.unique($(this).val().replace(/\r\n/g,"\n").split("\n"));
+				$.each(audioFiles,function(index,value){
+					var parts = value.split(',',2);
+					audioSelect.append('<option value="'+parts[1]+'">'+parts[0]+'</option>');
+				});
+				audioSelect.append('<option value="">None</option>');
+			
+				$.each(supportedKeys,function(index,value){
+					var keyMenu = $('#key-'+value);
+					if(!keyMenu.length){
+						$('#key-assignments').append($('<div></div>').wrapInner('<label for="key-'+value+'">'+value+':</label>').append(audioSelect.clone().attr('id','key-'+value)));
+					}else{
+						keyMenu.replaceWith(audioSelect.clone().attr('id','key-'+value).val(keyMenu.val()));
+					}
+				});
+			}).trigger('change');
+			
+			$(document).keydown(function(e){
+				var char = String.fromCharCode(e.which).toLowerCase();
+				
+				// certain keyboards send funny char values; I'm sure this isn't exhaustive
+				switch(char){
+					case ' ': char = 'space'; break;
+					case '&': char = 'up'; break;
+					case '(': char = 'down'; break;
+					case '%': char = 'left'; break;
+					case '\'': char = 'right'; break;
+				}
+								
+				if($.inArray(char,supportedKeys) != -1){
+					var src = $('#key-'+char).val();
+					if(src != ''){
+						var audio = new Audio();
+						audio.src = $('#key-'+char).val();
+						audio.play();
+					}
+				}
+				
+				history.push(char);
+				$('#history').html(history.join(', '));
+			});
+		});
+	</script>
+</head>
+<body>
+<h1>MaKey MaKey Soundboard</h1>
+<hr />
+<p>Add paths to your audio files here, one per line in the format: label,url&hellip;</p>
+<textarea id="audio-files" rows="10" style="width:100%;">
+Bell,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Interfaces/Bangs/idg-bang-intermed-2952/idg-bang-intermed-2952_hifi.mp3
+Gun,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Interfaces/Bangs/idg-bang-intermed-2642/idg-bang-intermed-2642_hifi.mp3
+Chime,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Interfaces/Zings/ptwiiing-Chris-8805/ptwiiing-Chris-8805_hifi.mp3
+Tap,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Instruments/Drums/Percussion/idg_perc-intermed-1470/idg_perc-intermed-1470_hifi.mp3</textarea>
+<p>&hellip;then assign audio to keys:</p>
+<div id="key-assignments"></div>
+<hr />
+<p>Key history:</p>
+<div id="history"></div>
+</body>
+</html>

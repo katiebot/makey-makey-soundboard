@@ -1,8 +1,88 @@
 <!doctype html>
 <html>
 <head>
+  <meta charset="utf-8">
 	<title>MaKey MaKey Soundboard</title>
+	<style type="text/css">
+	#key-assignments {
+	  margin-bottom: 25px;
+  	text-align: center;
+	}
+
+	#keys-draggable {
+  	height: 500px;
+  	margin: 0 auto;
+  	position: relative;
+  	width: 350px;
+	}
+	
+	.key {
+	  height: 100px;
+  	position: absolute;
+  	width: 100px;
+	}
+	
+	#key-up {
+  	background: red;
+  	left: 0;
+  	margin: 0 auto;
+  	right: 0;
+  	top: 0;
+	}
+	
+	#key-left {
+  	background: blue;
+  	left: 0;
+  	top: 125px;
+	}
+	
+	#key-right {
+  	background: yellow;
+  	right: 0;
+  	top: 125px;
+	}
+	
+	#key-down {
+  	background: aqua;
+  	left: 0;
+  	margin: 0 auto;
+  	right: 0;
+  	top: 250px;
+	}
+	
+	#key-space {
+  	background: fuchsia;
+  	left: 0;
+  	margin: 0 auto;
+  	right: 0;
+  	top: 375px;
+	}
+	
+	#key-assignments div {
+  	border: 1px solid #ccc;
+  	cursor: pointer;
+  	display: inline-block;
+  	margin: 0 3px;
+  	padding: 10px;
+	}
+	
+	#key-assignments div:hover {
+  	opacity: .85;
+	}
+	
+	#keys-draggable div div {
+    height: 12px;
+    margin-top: 40px;
+  	text-align: center;
+	}
+	</style>
+
+	<link rel="stylesheet" href="http://jqueryui.com/themes/base/jquery.ui.all.css">
 	<script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
+	<script src="http://jqueryui.com/ui/jquery.ui.core.js"></script>
+	<script src="http://jqueryui.com/ui/jquery.ui.widget.js"></script>
+	<script src="http://jqueryui.com/ui/jquery.ui.mouse.js"></script>
+	<script src="http://jqueryui.com/ui/jquery.ui.sortable.js"></script>
 	<script>
 		(function($){
 			var _old = $.unique;
@@ -17,25 +97,18 @@
 			};
 		})(jQuery);
 
-		jQuery(function($){
-			var supportedKeys = ['a','d','f','g','h','j','s','w','space','up','down','left','right'];		
+		jQuery(function($) {
+			//var supportedKeys = ['a','d','f','g','h','j','s','w','space','up','down','left','right'];
+			var supportedKeys = ['space','up','down','left','right'];
 			var history = [];
 			
-			$('#audio-files').on('keyup change',function(e){
-				var audioSelect = $('<select></select>');
+			$('#audio-files').on('keyup change', function(e) {
+				$('#key-assignments').text('');
 				var audioFiles = $.unique($(this).val().replace(/\r\n/g,"\n").split("\n"));
 				$.each(audioFiles,function(index,value){
-					var parts = value.split(',',2);
-					audioSelect.append('<option value="'+parts[1]+'">'+parts[0]+'</option>');
-				});
-				audioSelect.append('<option value="">None</option>');
-			
-				$.each(supportedKeys,function(index,value){
-					var keyMenu = $('#key-'+value);
-					if(!keyMenu.length){
-						$('#key-assignments').append($('<div></div>').wrapInner('<label for="key-'+value+'">'+value+':</label>').append(audioSelect.clone().attr('id','key-'+value)));
-					}else{
-						keyMenu.replaceWith(audioSelect.clone().attr('id','key-'+value).val(keyMenu.val()));
+					var parts = value.split(',' ,2);
+					if ( parts[1] ) {
+  					$('#key-assignments').append('<div audio-url="' + parts[1] + '">' + parts[0] + '</div>');
 					}
 				});
 			}).trigger('change');
@@ -53,10 +126,11 @@
 				}
 								
 				if($.inArray(char,supportedKeys) != -1){
-					var src = $('#key-'+char).val();
+					var src = $('#key-'+char).find('div').attr('audio-url');
+					console.log(char +' '+src);
 					if(src != ''){
 						var audio = new Audio();
-						audio.src = $('#key-'+char).val();
+						audio.src = $('#key-'+char).find('div').attr('audio-url');
 						audio.play();
 					}
 				}
@@ -64,6 +138,13 @@
 				history.push(char);
 				$('#history').html(history.join(', '));
 			});
+
+  		$( '.key, #key-assignments' ).sortable({
+  			connectWith: '.key, #key-assignments'
+  		});
+
+  		$( '.key, #key-assignments' ).disableSelection();
+
 		});
 	</script>
 </head>
@@ -76,8 +157,15 @@ Bell,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Interfaces/Bangs/idg-b
 Gun,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Interfaces/Bangs/idg-bang-intermed-2642/idg-bang-intermed-2642_hifi.mp3
 Chime,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Interfaces/Zings/ptwiiing-Chris-8805/ptwiiing-Chris-8805_hifi.mp3
 Tap,http://www.flashkit.com/imagesvr_ce/flashkit/soundfx/Instruments/Drums/Percussion/idg_perc-intermed-1470/idg_perc-intermed-1470_hifi.mp3</textarea>
-<p>&hellip;then assign audio to keys:</p>
+<p>&hellip;then drag and drop to keys:</p>
 <div id="key-assignments"></div>
+<div id="keys-draggable">
+  <div class="key" id="key-up"></div>
+  <div class="key" id="key-left"></div>
+  <div class="key" id="key-right"></div>
+  <div class="key" id="key-down"></div>
+  <div class="key" id="key-space"></div>
+</div>
 <hr />
 <p>Key history:</p>
 <div id="history"></div>
